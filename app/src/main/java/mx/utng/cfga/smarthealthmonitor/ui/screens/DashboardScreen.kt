@@ -1,3 +1,4 @@
+// ui/screens/DashboardScreen.kt
 package mx.utng.cfga.smarthealthmonitor.ui.screens
 
 import androidx.compose.foundation.layout.*
@@ -7,26 +8,32 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState // <-- NUEVO IMPORT
+import androidx.compose.runtime.getValue         // <-- NUEVO IMPORT
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import mx.utng.cfga.smarthealthmonitor.data.models.LecturaFC
-import mx.utng.cfga.smarthealthmonitor.data.models.MockData
+import androidx.lifecycle.viewmodel.compose.viewModel // <-- NUEVO IMPORT
+import mx.utng.cfga.smarthealthmonitor.data.SmartHealthRepository // <-- NUEVO IMPORT PARA EL SIMULADOR
 import mx.utng.cfga.smarthealthmonitor.ui.components.FilaHistorial
 import mx.utng.cfga.smarthealthmonitor.ui.components.TarjetaDato
 import mx.utng.cfga.smarthealthmonitor.ui.theme.SmartHealthMonitorTheme
+import mx.utng.cfga.smarthealthmonitor.ui.viewmodel.DashboardViewModel // <-- NUEVO IMPORT
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     onHistorialClick: () -> Unit,
     onAlertClick: () -> Unit,
-    fc: Int = MockData.fcActual,
-    pasos: Int = MockData.pasosActual,
-    historial: List<LecturaFC> = MockData.historialFC
+    viewModel: DashboardViewModel = viewModel() // <-- CAMBIO AQUÍ: Inyección automática de la Sesión 6
 ) {
+    // Escuchamos el estado del StateFlow en tiempo real usando el ViewModel
+    val fc by viewModel.fc.collectAsState()
+    val pasos by viewModel.pasos.collectAsState()
+    val historial = viewModel.historial
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -91,6 +98,28 @@ fun DashboardScreen(
             // Listado de historial dinámico
             items(historial) { lectura ->
                 FilaHistorial(lectura = lectura)
+            }
+
+            // ============================================================
+            // EJERCICIO 03: SIMULADOR DE DATOS DE WEARABLE (DEBUG)
+            // ============================================================
+            item {
+                OutlinedButton(
+                    onClick = {
+                        // Generamos números aleatorios para probar la reactividad
+                        val fcSimulado = (60..110).random()
+                        val pasosSimulados = (3000..9000).random()
+
+                        // Notificamos directamente al repositorio centralizado
+                        SmartHealthRepository.actualizarFC(fcSimulado)
+                        SmartHealthRepository.actualizarPasos(pasosSimulados)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text("Simular dato del wearable (DEBUG)")
+                }
             }
         }
     }
