@@ -10,7 +10,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState // <-- NUEVO IMPORT
 import androidx.compose.runtime.getValue         // <-- NUEVO IMPORT
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,7 +34,8 @@ fun DashboardScreen(
     // Escuchamos el estado del StateFlow en tiempo real usando el ViewModel
     val fc by viewModel.fc.collectAsState()
     val pasos by viewModel.pasos.collectAsState()
-    val historial = viewModel.historial
+    val historial by viewModel.historial.collectAsState()
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -111,7 +114,9 @@ fun DashboardScreen(
                         val pasosSimulados = (3000..9000).random()
 
                         // Notificamos directamente al repositorio centralizado
-                        SmartHealthRepository.actualizarFC(fcSimulado)
+                        scope.launch {
+                            SmartHealthRepository.actualizarFC(fcSimulado)
+                        }
                         SmartHealthRepository.actualizarPasos(pasosSimulados)
                     },
                     modifier = Modifier

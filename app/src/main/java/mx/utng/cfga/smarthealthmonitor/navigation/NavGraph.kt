@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import mx.utng.cfga.smarthealthmonitor.LoginScreen
 import mx.utng.cfga.smarthealthmonitor.ui.screens.DashboardScreen
+import mx.utng.cfga.smarthealthmonitor.ui.screens.HistorialScreen // 👇 IMPORTANTE: Asegúrate de que esta ruta coincida con tu paquete
 import mx.utng.cfga.smarthealthmonitor.ui.theme.SmartHealthMonitorTheme
 
 @Composable
@@ -27,11 +28,9 @@ fun SmartHealthNavGraph() {
     ) {
 
         composable(Screen.Login.route) {
-
             LoginScreen(
                 onLoginSuccess = {
                     navController.navigate(Screen.Dashboard.route) {
-
                         popUpTo(Screen.Login.route) {
                             inclusive = true
                         }
@@ -41,7 +40,6 @@ fun SmartHealthNavGraph() {
         }
 
         composable(Screen.Dashboard.route) {
-
             DashboardScreen(
                 onHistorialClick = {
                     navController.navigate(Screen.Historial.route)
@@ -52,18 +50,17 @@ fun SmartHealthNavGraph() {
             )
         }
 
+        // 👇 CORREGIDO: Ahora conecta directamente con la interfaz reactiva de Room
         composable(Screen.Historial.route) {
-
-            PantallaEnConstruccion(
-                titulo = "Historial completo",
+            HistorialScreen(
                 onBack = {
                     navController.popBackStack()
                 }
             )
         }
 
+        // Se mantiene en construcción ya que la práctica solo pide Room para el Historial
         composable(Screen.Alerta.route) {
-
             PantallaEnConstruccion(
                 titulo = "Enviar alerta",
                 onBack = {
@@ -80,25 +77,17 @@ fun PantallaEnConstruccion(
     titulo: String,
     onBack: () -> Unit
 ) {
-
     SmartHealthMonitorTheme {
-
         Scaffold(
-
             topBar = {
-
                 CenterAlignedTopAppBar(
-
                     title = {
                         Text(titulo)
                     },
-
                     navigationIcon = {
-
                         IconButton(
                             onClick = onBack
                         ) {
-
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Regresar"
@@ -107,17 +96,13 @@ fun PantallaEnConstruccion(
                     }
                 )
             }
-
         ) { padding ->
-
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-
                 contentAlignment = Alignment.Center
             ) {
-
                 Text(
                     text = "Próximamente: $titulo",
                     style = MaterialTheme.typography.titleMedium
