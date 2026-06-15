@@ -10,31 +10,46 @@ import androidx.wear.compose.material3.Card
 import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.MaterialTheme
 
+import androidx.compose.ui.text.style.TextAlign
+
 @Composable
 fun WearFCCard(
     fc: Int,
     modifier: Modifier = Modifier
 ) {
-    val colorFC = if (fc in 60..100) MaterialTheme.colors.primary else MaterialTheme.colors.error
+    val colorFC = if (fc in 60..100) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
 
     Card(
         onClick = { },
         modifier = modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp, horizontal = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Text(text = "❤️", fontSize = 16.sp)
+            Text(
+                text = "❤️", 
+                fontSize = 20.sp,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "$fc",
-                style = MaterialTheme.typography.display3,
-                color = colorFC
+                style = MaterialTheme.typography.displayMedium,
+                color = colorFC,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
             )
             Text(
-                text = "bpm",
-                style = MaterialTheme.typography.caption3,
-                color = MaterialTheme.colors.onSurfaceVariant
+                text = "BPM",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
             )
         }
     }

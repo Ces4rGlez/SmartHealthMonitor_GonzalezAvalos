@@ -27,6 +27,7 @@ class HealthDataService : PassiveListenerService() {
                 // Lanzar corrutina para despachar el valor al teléfono mediante nuestro Sender
                 scope.launch {
                     wearDataSender.enviarFC(bpm)
+                    SmartHealthRepository.actualizarFC(bpm)
                 }
             }
         }

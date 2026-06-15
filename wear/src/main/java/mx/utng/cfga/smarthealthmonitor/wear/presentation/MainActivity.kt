@@ -8,11 +8,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import mx.utng.cfga.smarthealthmonitor.wear.presentation.theme.SmartHealthWearTheme
 
 class MainActivity : ComponentActivity() {
+
+    private lateinit var viewModel: WearDashboardViewModel
 
     // Manejador de la respuesta de permisos por parte del usuario
     private val permissionLauncher = registerForActivityResult(
@@ -28,6 +31,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Inicializar ViewModel manualmente ya que no tenemos la extensión viewmodel-compose
+        viewModel = ViewModelProvider(this).get(WearDashboardViewModel::class.java)
 
         // ── VERIFICACIÓN DE PERMISOS PARA WEARABLES ──────────────────────────
         val permissionsToRequest = mutableListOf(Manifest.permission.BODY_SENSORS)
@@ -51,7 +57,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             SmartHealthWearTheme {
                 // Conectamos el NavGraph que controla el Dashboard circular y la pantalla de Alerta
-                SmartHealthWearNavGraph()
+                SmartHealthWearNavGraph(viewModel = viewModel)
             }
         }
     }
