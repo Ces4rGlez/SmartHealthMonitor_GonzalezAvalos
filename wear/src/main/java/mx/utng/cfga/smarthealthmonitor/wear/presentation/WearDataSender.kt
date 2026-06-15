@@ -16,9 +16,14 @@ class WearDataSender(private val context: Context) {
             val nodos = nodeClient.connectedNodes.await()
             val datos = bpm.toString().toByteArray(Charsets.UTF_8)
 
+            if (nodos.isEmpty()) {
+                Log.w("WearDataSender", "⚠️ No se encontraron nodos conectados. Verifica el emparejamiento con el teléfono.")
+            }
+
             for (nodo in nodos) {
-                // Envía el mensaje a la ruta "/frecuencia_cardiaca"
-                messageClient.sendMessage(nodo.id, "/frecuencia_cardiaca", datos).await()
+                Log.d("WearDataSender", "🔗 Enviando a nodo: ${nodo.displayName}")
+                // Envía el mensaje a la ruta "/smarthealthmonitor/fc" para que coincida con el receptor
+                messageClient.sendMessage(nodo.id, "/smarthealthmonitor/fc", datos).await()
                 Log.d("WearDataSender", "👉 FC enviada con éxito al teléfono: $bpm BPM")
             }
         } catch (e: Exception) {

@@ -1,127 +1,76 @@
-/* While this template provides a good starting point for using Wear Compose, you can always
- * take a look at https://github.com/android/wear-os-samples/tree/main/ComposeStarter to find the
- * most up to date changes to the libraries and their usages.
- */
-
 package mx.utng.cfga.smarthealthmonitor.wear.presentation
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
-import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
-import androidx.wear.compose.material3.AppScaffold
-import androidx.wear.compose.material3.Button
-import androidx.wear.compose.material3.ButtonDefaults
-import androidx.wear.compose.material3.EdgeButton
-import androidx.wear.compose.material3.ListHeader
-import androidx.wear.compose.material3.MaterialTheme
-import androidx.wear.compose.material3.ScreenScaffold
-import androidx.wear.compose.material3.SurfaceTransformation
-import androidx.wear.compose.material3.Text
-import androidx.wear.compose.material3.lazy.rememberTransformationSpec
-import androidx.wear.compose.material3.lazy.transformedHeight
-import androidx.wear.compose.ui.tooling.preview.WearPreviewDevices
-import androidx.wear.compose.ui.tooling.preview.WearPreviewFontScales
 import kotlinx.coroutines.launch
-import mx.utng.cfga.smarthealthmonitor.wear.R
-import mx.utng.cfga.smarthealthmonitor.wear.presentation.theme.SmartHealthMonitorTheme
+import mx.utng.cfga.smarthealthmonitor.wear.presentation.theme.SmartHealthWearTheme
 
 class MainActivity : ComponentActivity() {
+
+    private lateinit var viewModel: WearDashboardViewModel
+
+    // Manejador de la respuesta de permisos por parte del usuario
+    private val permissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val bodySensorsGranted = permissions[Manifest.permission.BODY_SENSORS] ?: false
+        if (bodySensorsGranted) {
+            iniciarServicioSalud()
+        } else {
+            Log.w("MainActivity", "⚠️ El usuario denegó los permisos de sensores corporales.")
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 👇 INICIALIZA LA ESCUCHA PASIVA DEL SENSOR DE FRECUENCIA CARDÍACA REAL
+        // Inicializar ViewModel manualmente ya que no tenemos la extensión viewmodel-compose
+        viewModel = ViewModelProvider(this).get(WearDashboardViewModel::class.java)
+
+        // ── VERIFICACIÓN DE PERMISOS PARA WEARABLES ──────────────────────────
+        val permissionsToRequest = mutableListOf(Manifest.permission.BODY_SENSORS)
+
+        // Android 13+ requiere de manera obligatoria permisos en segundo plano para servicios pasivos
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            permissionsToRequest.add(Manifest.permission.BODY_SENSORS_BACKGROUND)
+        }
+
+        val missingPermissions = permissionsToRequest.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (missingPermissions.isEmpty()) {
+            iniciarServicioSalud()
+        } else {
+            permissionLauncher.launch(missingPermissions.toTypedArray())
+        }
+
+        // ── INYECCIÓN DEL GRAFO DE NAVEGACIÓN COMPOSE FOR WEAR OS ────────────
+        setContent {
+            SmartHealthWearTheme {
+                // Conectamos el NavGraph que controla el Dashboard circular y la pantalla de Alerta
+                SmartHealthWearNavGraph(viewModel = viewModel)
+            }
+        }
+    }
+
+    // ── REGISTRO DEL SERVICIO RECEPTOR EN SEGUNDO PLANO ──────────────────────
+    private fun iniciarServicioSalud() {
         lifecycleScope.launch {
             try {
                 HealthDataService.registrar(applicationContext)
+                Log.d("MainActivity", "✅ Registro de HealthDataService exitoso")
             } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-
-        setContent {
-            WearApp("Android")
-        }
-    }
-}
-
-@Composable
-fun WearApp(greetingName: String) {
-    SmartHealthMonitorTheme {
-        AppScaffold {
-            val listState = rememberTransformingLazyColumnState()
-            val transformationSpec = rememberTransformationSpec()
-            ScreenScaffold(
-                scrollState = listState,
-                edgeButton = {
-                    EdgeButton(
-                        onClick = { /*TODO*/ },
-                        colors =
-                            ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            ),
-                    ) {
-                        Text("More")
-                    }
-                },
-            ) { contentPadding -> // ScreenScaffold provides default padding; adjust as needed
-                TransformingLazyColumn(contentPadding = contentPadding, state = listState) {
-                    item {
-                        ListHeader(
-                            modifier =
-                                Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
-                            transformation = SurfaceTransformation(transformationSpec),
-                        ) {
-                            Text(text = stringResource(R.string.hello_world, greetingName))
-                        }
-                    }
-                    item {
-                        Button(
-                            onClick = { /*TODO*/ },
-                            modifier = Modifier.fillMaxWidth()
-                                .transformedHeight(this, transformationSpec),
-                            transformation = SurfaceTransformation(transformationSpec),
-                        ) {
-                            Text("Button A")
-                        }
-                    }
-                    item {
-                        Button(
-                            onClick = { /*TODO*/ },
-                            modifier = Modifier.fillMaxWidth()
-                                .transformedHeight(this, transformationSpec),
-                            transformation = SurfaceTransformation(transformationSpec),
-                        ) {
-                            Text("Button B")
-                        }
-                    }
-                    item {
-                        Button(
-                            onClick = { /*TODO*/ },
-                            modifier = Modifier.fillMaxWidth()
-                                .transformedHeight(this, transformationSpec),
-                            transformation = SurfaceTransformation(transformationSpec),
-                        ) {
-                            Text("Button C")
-                        }
-                    }
-
-                }
+                Log.e("MainActivity", "❌ Error al registrar HealthDataService", e)
             }
         }
     }
-}
-
-@WearPreviewDevices
-@WearPreviewFontScales
-@Composable
-fun DefaultPreview() {
-    WearApp("Preview Android")
 }
