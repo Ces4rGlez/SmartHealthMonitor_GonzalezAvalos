@@ -12,7 +12,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "mx.utng.cfga.smarthealthmonitor.wear"
+        applicationId = "mx.utng.cfga.smarthealthmonitor"
         minSdk = 30
         targetSdk = 36
         versionCode = 1
