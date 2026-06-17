@@ -17,4 +17,12 @@ class WearDashboardViewModel : ViewModel() {
     // Flujo de pasos reactivo
     val pasos: StateFlow<Int> = SmartHealthRepository.pasosFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
+
+    val historial: StateFlow<List<LecturaFC>> = SmartHealthRepository.obtenerHistorial()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyList()
+        )
 }

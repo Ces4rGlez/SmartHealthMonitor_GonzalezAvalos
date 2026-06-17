@@ -19,7 +19,8 @@ import androidx.wear.compose.foundation.lazy.AutoCenteringParams
 @Composable
 fun WearDashboardScreen(
     viewModel: WearDashboardViewModel,
-    onAlertClick: () -> Unit = {}
+    onAlertClick: () -> Unit = {},
+    onHistorialClick: () -> Unit = {} // 👈 AGREGADO: Callback para la navegación del Ejercicio 01
 ) {
     val fc by viewModel.fc.collectAsState()
     val pasos by viewModel.pasos.collectAsState()
@@ -27,7 +28,7 @@ fun WearDashboardScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val dataSender = remember { WearDataSender(context) }
-    
+
     var sliderValue by remember { mutableFloatStateOf(fc.toFloat()) }
 
     ScreenScaffold(
@@ -95,8 +96,8 @@ fun WearDashboardScreen(
                         Spacer(modifier = Modifier.height(6.dp))
                         Slider(
                             value = sliderValue,
-                            onValueChange = { 
-                                sliderValue = it 
+                            onValueChange = {
+                                sliderValue = it
                                 val bpm = it.toInt()
                                 scope.launch {
                                     SmartHealthRepository.actualizarFC(bpm)
@@ -117,12 +118,12 @@ fun WearDashboardScreen(
             item {
                 TitleCard(
                     onClick = { },
-                    title = { 
+                    title = {
                         Text(
-                            "🏃 ACTIVIDAD", 
+                            "🏃 ACTIVIDAD",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.tertiary
-                        ) 
+                        )
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -133,7 +134,33 @@ fun WearDashboardScreen(
                 }
             }
 
-            item { Spacer(modifier = Modifier.height(16.dp)) }
+            item { Spacer(modifier = Modifier.height(8.dp)) }
+
+            // ── NUEVO: Botón de Historial con Material 3 ───────────────────
+            item {
+                Card(
+                    onClick = onHistorialClick,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(vertical = 12.dp, horizontal = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text("📋", fontSize = 16.sp)
+                        Text(
+                            text = "Historial Clínico",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            item { Spacer(modifier = Modifier.height(12.dp)) }
 
             // Botón SOS de Emergencia - Look "Actionable"
             item {
