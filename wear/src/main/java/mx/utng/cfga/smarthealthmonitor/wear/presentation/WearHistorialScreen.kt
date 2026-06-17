@@ -11,21 +11,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumnDefaults
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.foundation.rotary.RotaryScrollableDefaults
 import androidx.wear.compose.foundation.rotary.rotaryScrollable
-import androidx.wear.compose.material.*
-import mx.utng.cfga.smarthealthmonitor.data.models.LecturaFC // Ajustado a tu estructura de datos
+import androidx.wear.compose.material3.*
 import mx.utng.cfga.smarthealthmonitor.wear.presentation.components.WearFilaHistorial
 
 @Composable
 fun WearHistorialScreen(
     onBack: () -> Unit,
-    viewModel: WearDashboardViewModel = viewModel()
+    viewModel: WearDashboardViewModel
 ) {
     val historial by viewModel.historial.collectAsState()
     val listState = rememberScalingLazyListState()
@@ -36,12 +34,10 @@ fun WearHistorialScreen(
         focusRequester.requestFocus()
     }
 
-    Scaffold(
+    ScreenScaffold(
+        scrollState = listState,
         timeText = {
-            TimeText(modifier = Modifier.scrollAway(listState))
-        },
-        positionIndicator = {
-            PositionIndicator(scalingLazyListState = listState)
+            TimeText()
         }
     ) {
         ScalingLazyColumn(
@@ -53,14 +49,13 @@ fun WearHistorialScreen(
                     behavior = RotaryScrollableDefaults.behavior(scrollableState = listState),
                     focusRequester = focusRequester
                 ),
-            // SOLUCIÓN RETO ADICIONAL: Snap Fling Behavior para que "encaje" magnéticamente en cada ítem
             flingBehavior = ScalingLazyColumnDefaults.snapFlingBehavior(state = listState)
         ) {
             item {
                 Text(
                     text = "Historial (${historial.size})",
-                    style = MaterialTheme.typography.title3,
-                    modifier = Modifier.padding(8.dp)
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
 
@@ -68,13 +63,23 @@ fun WearHistorialScreen(
                 item {
                     Text(
                         text = "Sin lecturas aún",
-                        style = MaterialTheme.typography.body2,
+                        style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(8.dp)
                     )
                 }
             } else {
-                items(historial, key = { it.id }) { lectura ->
+                items(historial) { lectura ->
                     WearFilaHistorial(lectura = lectura)
+                }
+            }
+
+            item {
+                Button(
+                    onClick = onBack,
+                    modifier = Modifier.padding(top = 8.dp),
+                    colors = ButtonDefaults.filledTonalButtonColors()
+                ) {
+                    Text("Volver")
                 }
             }
         }
