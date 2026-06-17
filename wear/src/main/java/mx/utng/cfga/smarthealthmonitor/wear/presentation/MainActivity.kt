@@ -13,6 +13,11 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import mx.utng.cfga.smarthealthmonitor.wear.presentation.theme.SmartHealthWearTheme
 
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
+import android.widget.Toast
+
 class MainActivity : ComponentActivity() {
 
     private lateinit var viewModel: WearDashboardViewModel
@@ -23,42 +28,83 @@ class MainActivity : ComponentActivity() {
     ) { permissions ->
         val bodySensorsGranted = permissions[Manifest.permission.BODY_SENSORS] ?: false
         if (bodySensorsGranted) {
+            Log.d("MainActivity", "✅ Permiso BODY_SENSORS concedido.")
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                verificarPermisoBackground()
+            } else {
+                iniciarServicioSalud()
+            }
+        } else {
+            Log.e("MainActivity", "❌ El usuario denegó los permisos de sensores corporales.")
+            Toast.makeText(this, "Debes habilitar los sensores en Ajustes", Toast.LENGTH_LONG).show()
+            
+            // Si el permiso fue denegado, abrimos los ajustes de la app para que lo active manualmente
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.fromParts("package", packageName, null)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            startActivity(intent)
+        }
+    }
+
+    private val backgroundPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            Log.d("MainActivity", "✅ Permiso BACKGROUND concedido.")
             iniciarServicioSalud()
         } else {
-            Log.w("MainActivity", "⚠️ El usuario denegó los permisos de sensores corporales.")
+            Log.e("MainActivity", "❌ Permiso de sensores en segundo plano denegado.")
+            Toast.makeText(this, "Habilita 'Permitir siempre' en Ajustes", Toast.LENGTH_LONG).show()
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Inicializar ViewModel manualmente ya que no tenemos la extensión viewmodel-compose
         viewModel = ViewModelProvider(this).get(WearDashboardViewModel::class.java)
 
-        // ── VERIFICACIÓN DE PERMISOS PARA WEARABLES ──────────────────────────
-        val permissionsToRequest = mutableListOf(Manifest.permission.BODY_SENSORS)
+        // Verificación inicial
+        checkPermissionsAndStart()
 
-        // Android 13+ requiere de manera obligatoria permisos en segundo plano para servicios pasivos
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            permissionsToRequest.add(Manifest.permission.BODY_SENSORS_BACKGROUND)
-        }
-
-        val missingPermissions = permissionsToRequest.filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
-        }
-
-        if (missingPermissions.isEmpty()) {
-            iniciarServicioSalud()
-        } else {
-            permissionLauncher.launch(missingPermissions.toTypedArray())
-        }
-
-        // ── INYECCIÓN DEL GRAFO DE NAVEGACIÓN COMPOSE FOR WEAR OS ────────────
         setContent {
             SmartHealthWearTheme {
-                // Conectamos el NavGraph que controla el Dashboard circular y la pantalla de Alerta
                 SmartHealthWearNavGraph(viewModel = viewModel)
             }
+        }
+    }
+
+    private fun checkPermissionsAndStart() {
+        val sensorStatus = ContextCompat.checkSelfPermission(this, Manifest.permission.BODY_SENSORS)
+        
+        when {
+            sensorStatus == PackageManager.PERMISSION_GRANTED -> {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                    verificarPermisoBackground()
+                } else {
+                    iniciarServicioSalud()
+                }
+            }
+            shouldShowRequestPermissionRationale(Manifest.permission.BODY_SENSORS) -> {
+                // El usuario ya lo denegó antes, pero podemos pedirlo de nuevo con una explicación
+                permissionLauncher.launch(arrayOf(Manifest.permission.BODY_SENSORS))
+            }
+            else -> {
+                // Si llegamos aquí y no es la primera vez, el cuadro está bloqueado.
+                // Abrimos ajustes directamente para no dejar al usuario bloqueado.
+                permissionLauncher.launch(arrayOf(Manifest.permission.BODY_SENSORS))
+            }
+        }
+    }
+
+    private fun verificarPermisoBackground() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BODY_SENSORS_BACKGROUND)
+            != PackageManager.PERMISSION_GRANTED) {
+            
+            Log.d("MainActivity", "Solicitando permiso BACKGROUND...")
+            backgroundPermissionLauncher.launch(Manifest.permission.BODY_SENSORS_BACKGROUND)
+        } else {
+            iniciarServicioSalud()
         }
     }
 

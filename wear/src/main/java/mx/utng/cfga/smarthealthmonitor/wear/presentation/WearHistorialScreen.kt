@@ -1,0 +1,87 @@
+package mx.utng.cfga.smarthealthmonitor.wear.presentation
+
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.unit.dp
+import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
+import androidx.wear.compose.foundation.lazy.ScalingLazyColumnDefaults
+import androidx.wear.compose.foundation.lazy.items
+import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
+import androidx.wear.compose.foundation.rotary.RotaryScrollableDefaults
+import androidx.wear.compose.foundation.rotary.rotaryScrollable
+import androidx.wear.compose.material3.*
+import mx.utng.cfga.smarthealthmonitor.wear.presentation.components.WearFilaHistorial
+
+@Composable
+fun WearHistorialScreen(
+    onBack: () -> Unit,
+    viewModel: WearDashboardViewModel
+) {
+    val historial by viewModel.historial.collectAsState()
+    val listState = rememberScalingLazyListState()
+    val focusRequester = remember { FocusRequester() }
+
+    // Forzar el foco para capturar los giros de la corona inmediatamente
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
+    ScreenScaffold(
+        scrollState = listState,
+        timeText = {
+            TimeText()
+        }
+    ) {
+        ScalingLazyColumn(
+            state = listState,
+            modifier = Modifier
+                .fillMaxSize()
+                .focusRequester(focusRequester)
+                .rotaryScrollable(
+                    behavior = RotaryScrollableDefaults.behavior(scrollableState = listState),
+                    focusRequester = focusRequester
+                ),
+            flingBehavior = ScalingLazyColumnDefaults.snapFlingBehavior(state = listState)
+        ) {
+            item {
+                Text(
+                    text = "Historial (${historial.size})",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
+            if (historial.isEmpty()) {
+                item {
+                    Text(
+                        text = "Sin lecturas aún",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
+            } else {
+                items(historial) { lectura ->
+                    WearFilaHistorial(lectura = lectura)
+                }
+            }
+
+            item {
+                Button(
+                    onClick = onBack,
+                    modifier = Modifier.padding(top = 8.dp),
+                    colors = ButtonDefaults.filledTonalButtonColors()
+                ) {
+                    Text("Volver")
+                }
+            }
+        }
+    }
+}
