@@ -33,6 +33,20 @@ Desarrollada como proyecto integrador — UTNG 9° Cuatrimestre 2026.
 |--- |--- |
 | ![Historial](screenshots/historial.png) | ![Alerta](screenshots/alerta.png) |
 
+
+## Unidad II — Aplicaciones para Wearables (Compose for Wear OS)
+
+| Pantalla | Descripción |
+|---|---|
+| **WearDashboardScreen** | Despliegue de frecuencia cardíaca e indicador de pasos en tiempo real implementando `ScalingLazyColumn` y ocultación fluida de `TimeText`. |
+| **WearHistorialScreen** | Listado de mediciones pasadas integrado con Room persistente, utilizando el control físico de la corona del reloj (`.rotaryScrollable`) y anclaje por magnetismo (*Snap*). |
+| **WearAlertaScreen** | Interfaz optimizada con botones de confirmación y cancelación preparados para diálogos rápidos en situaciones de emergencia. |
+| **SmartHealth WatchFace** | Pantalla de inicio nativa del reloj que dibuja de forma optimizada la hora, segundos y el último registro cardíaco, incluyendo atenuación energética para el modo Always-On Display. |
+
+![WatchFace](screenshots/watchface.png)
+![WearDashboard](screenshots/wear_dashboard.png)
+
+
 ## ✒️ Autor
 * **César Fernando González Ávalos** - Estudiante de Ingeniería en Desarrollo y Gestión de Software
 * *Universidad Tecnológica del Norte de Guanajuato (UTNG)*
