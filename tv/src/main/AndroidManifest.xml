@@ -13,7 +13,7 @@
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="SmartHealth TV"
+        android:label="SmartHealthTV"
         android:supportsRtl="true"
         android:theme="@style/Theme.SmartHealthTV"
         android:banner="@drawable/banner_tv">
