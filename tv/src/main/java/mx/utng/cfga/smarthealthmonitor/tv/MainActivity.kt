@@ -1,21 +1,20 @@
-package mx.utng.smarthealthmonitor.tv
+package mx.utng.cfga.smarthealthmonitor.tv
 
 import android.os.Bundle
-import androidx.fragment.app.FragmentActivity
-import mx.utng.cfga.smarthealthmonitor.tv.R
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.tv.material3.ExperimentalTvMaterial3Api
+import mx.utng.cfga.smarthealthmonitor.tv.presentation.TvCatalogScreen
+import mx.utng.cfga.smarthealthmonitor.tv.ui.theme.SmartHealthMonitorTheme
 
-/**
- * MainActivity para Android TV.
- * Es solo el contenedor: carga MainFragment.
- */
-class MainActivity : FragmentActivity() {
+class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalTvMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        if (savedInstanceState == null) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.main_browse_fragment, MainFragment())
-                .commit()
+        setContent {
+            SmartHealthMonitorTheme {
+                TvCatalogScreen(onCardClick = { /* Acción al hacer click */ })
+            }
         }
     }
 }

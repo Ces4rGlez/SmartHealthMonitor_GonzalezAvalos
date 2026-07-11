@@ -1,24 +1,22 @@
-package mx.utng.cfga.smarthealthmonitor.tv // ¡Tu paquete correcto!
+package mx.utng.cfga.smarthealthmonitor.tv
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.content.ContextCompat
 import androidx.leanback.app.BrowseSupportFragment
 import androidx.leanback.widget.*
-// OJO: Asegúrate de que estas importaciones apunten a tu módulo :app
-import mx.utng.cfga.smarthealthmonitor.data.MockData
-import mx.utng.cfga.smarthealthmonitor.data.db.LecturaFC
+import mx.utng.cfga.smarthealthmonitor.data.models.LecturaFC
+import mx.utng.cfga.smarthealthmonitor.data.models.MockData
 
 class MainFragment : BrowseSupportFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Configuración de la cabecera visual de Leanback
         title = "SmartHealth TV"
         headersState = HEADERS_ENABLED
         isHeadersTransitionOnBackEnabled = true
 
-        // Color del sidebar izquierdo
-        brandColor = resources.getColor(R.color.sh_primary, null)
+        brandColor = ContextCompat.getColor(requireContext(), R.color.sh_primary)
 
         cargarFilas()
     }
@@ -26,10 +24,10 @@ class MainFragment : BrowseSupportFragment() {
     private fun cargarFilas() {
         val rowsAdapter = ArrayObjectAdapter(ListRowPresenter())
 
-        // ── Fila 1: Estado actual (Datos fijos o mockups rápidos) ──
+        // ── Fila 1: Estado actual ──
         val estadoAdapter = ArrayObjectAdapter(FCCardPresenter())
-        estadoAdapter.add(LecturaFC(id = 0, valorBpm = 88, hora = "Ahora"))
-        estadoAdapter.add(LecturaFC(id = 1, valorBpm = 115, hora = "Alerta Taquicardia")) // Saldrá roja por la lógica del presenter
+        estadoAdapter.add(LecturaFC(id = 0, fecha = "Hoy", hora = "Ahora", bpm = 88, estado = "Normal"))
+        estadoAdapter.add(LecturaFC(id = 1, fecha = "Hoy", hora = "Alerta", bpm = 115, estado = "Alto"))
         rowsAdapter.add(ListRow(HeaderItem("Estado actual"), estadoAdapter))
 
         // ── Fila 2: Historial de FC desde MockData ──

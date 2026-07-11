@@ -10,6 +10,10 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.mediarouter.app.MediaRouteButton
+import com.google.android.gms.cast.framework.CastButtonFactory
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -21,6 +25,30 @@ import mx.utng.cfga.smarthealthmonitor.ui.components.FilaHistorial
 import mx.utng.cfga.smarthealthmonitor.ui.components.TarjetaDato
 import mx.utng.cfga.smarthealthmonitor.ui.theme.SmartHealthMonitorTheme
 import mx.utng.cfga.smarthealthmonitor.ui.viewmodel.DashboardViewModel
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DashboardTopBar(title: String) {
+    TopAppBar(
+        title = { Text(text = title, style = MaterialTheme.typography.titleLarge) },
+        actions = {
+            // CastButton: AndroidView que envuelve MediaRouteButton
+            AndroidView(
+                factory = { context ->
+                    MediaRouteButton(context).apply {
+                        CastButtonFactory.setUpMediaRouteButton(context, this)
+                    }
+                },
+                modifier = Modifier.size(48.dp)
+            )
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            titleContentColor = MaterialTheme.colorScheme.onPrimary,
+            actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+        )
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,13 +111,7 @@ fun DashboardScreen(
             // ── CONTROL DEL SNACKBAR ASIGNADO AL SCAFFOLD ──────────────────────────
             snackbarHost = { SnackbarHost(hostState = snackbarHost) },
             topBar = {
-                TopAppBar(
-                    title = { Text(text = "SmartHealth", style = MaterialTheme.typography.titleLarge) },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimary
-                    )
-                )
+                DashboardTopBar(title = "SmartHealth")
             },
             // ── BOTÓN FLOTANTE ROJO DE EMERGENCIA COMPATIBLE CON WCAG (48dp) ───────
             floatingActionButton = {

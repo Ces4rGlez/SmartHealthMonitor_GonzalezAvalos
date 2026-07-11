@@ -10,6 +10,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.tv.foundation.lazy.list.TvLazyColumn
 import androidx.tv.foundation.lazy.list.items
 import androidx.tv.material3.*
+import mx.utng.cfga.smarthealthmonitor.data.models.LecturaFC
 import mx.utng.cfga.smarthealthmonitor.tv.TvViewModel
 import mx.utng.cfga.smarthealthmonitor.tv.TvViewModelFactory
 
