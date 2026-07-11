@@ -77,9 +77,9 @@ fun DashboardScreen(
                 scope.launch {
                     // Mensaje dinámico dependiendo de si el usuario escribió una nota o no
                     val mensaje = if (nota.isBlank()) {
-                        "✅ Alerta enviada a tus contactos de emergencia"
+                        "✅ Alerta Enviada a tus contactos de emergencia"
                     } else {
-                        "✅ Alerta enviada: \"$nota\""
+                        "✅ Alerta Enviada: \"$nota\""
                     }
 
                     // Lanzamos el Snackbar con la opción de Deshacer (Reto Adicional)
