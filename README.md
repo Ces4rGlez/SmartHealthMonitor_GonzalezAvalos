@@ -46,7 +46,7 @@ Desarrollada como proyecto integrador — UTNG 9° Cuatrimestre 2026.
 ![WatchFace](screenshots/watchface.png)
 ![WearDashboard](screenshots/wear_dashboard.png)
 
-## Arquitectura — SmartHealth Monitor
+## Arquitectura — SmartHealth-Monitor
 
 ```
 Sensor PPG (Wear OS)
