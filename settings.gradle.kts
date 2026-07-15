@@ -27,3 +27,4 @@ rootProject.name = "SmartHealthMonitor"
 include(":app")
 include(":wear")
 include(":tv")
+include(":data")

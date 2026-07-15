@@ -46,33 +46,58 @@ Desarrollada como proyecto integrador — UTNG 9° Cuatrimestre 2026.
 ![WatchFace](screenshots/watchface.png)
 ![WearDashboard](screenshots/wear_dashboard.png)
 
-## Arquitectura — SmartHealth-Monitor
+## 🏗️ Arquitectura — SmartHealth-Monitor
 
-```
-Sensor PPG (Wear OS)
+El proyecto sigue una arquitectura limpia (Clean Architecture) adaptada a componentes Android modernos, dividiendo la aplicación en capas de **Frontend (Presentación)** y **Backend (Dominio/Datos)**.
+
+### Frontend (Capa de Presentación)
+Encargada de la interfaz de usuario y la interacción directa.
+* **Jetpack Compose / Compose for Wear OS / Compose for TV:** Frameworks declarativos utilizados para construir las interfaces de usuario en los diferentes factores de forma.
+* **ViewModels:** Gestionan el estado de la UI (`StateFlow`) y reaccionan a los eventos del usuario, sobreviviendo a los cambios de configuración.
+
+### Backend (Capa de Datos y Servicios Locales)
+Encargada de la lógica de negocio, recolección de datos de sensores y persistencia.
+* **Health Services API:** Recolección de datos crudos (frecuencia cardíaca, pasos) en el reloj inteligente.
+* **Wearable Data Layer API (MessageClient):** Comunicación bidireccional entre los nodos (Móvil, Wearable, TV) a través de BLE y WiFi.
+* **Room Database:** Persistencia local actuando como la fuente única de verdad (Single Source of Truth), exponiendo los datos almacenados mediante Kotlin `Flow` para actualizaciones reactivas.
+* **Repositories:** Actúan como mediadores para consolidar la información obtenida de sensores locales, base de datos y la red de dispositivos.
+
+### Diagrama de Flujo de Datos
+
+```text
+[Wear OS - Backend Local]
+Sensor PPG (Frecuencia Cardíaca)
     │  Health Services API
     ▼
 PassiveListenerService (wear)
-    │  MessageClient (BLE)
+    │  MessageClient (Data Layer)
     ▼
+[App Móvil - Backend Local]
 WearListenerService (app)
     │  SmartHealthRepository
     ▼
 StateFlow<Int> (fcActual)  ──────────────────────────────────┐
     │                                                        │
     ▼                                                        ▼
-DashboardViewModel (app)              TvViewModel (tv)
-    │  collectAsState()                    │  collectAsState()
-    ▼                                        ▼
-DashboardScreen (Compose)          TvCatalogScreen (Compose TV)
+[App Móvil - Frontend]                               [Android TV - Frontend]
+DashboardViewModel (app)                              TvViewModel (tv)
+    │  collectAsState()                                    │  collectAsState()
+    ▼                                                      ▼
+DashboardScreen (Compose)                          TvCatalogScreen (Compose TV)
     └── CastButton ──► Chromecast (Remote Playback)
 
+[App Móvil - Backend / Persistencia]
 Room DB (LecturaFC)  ◄──  Repository  ──►  Flow<List<LecturaFC>>
                                                 │
                           ┌─────────────────────┴──────────┐
                           ▼                                ▼
                HistorialScreen (app)        TvCatalogScreen (tv)
 ```
+
+## ⚙️ Integración Continua (CI)
+
+El proyecto cuenta con un flujo de trabajo (Workflow) automatizado a través de **GitHub Actions**.
+* **Construcción y Pruebas:** Se ejecuta un flujo (`ci.yml`) que valida la compilación (`./gradlew build`) y corre todas las pruebas unitarias (`./gradlew test`) cada vez que se hace push o pull request hacia las ramas principales.
 
 ## ✒️ Autor
 * **César Fernando González Ávalos** - Estudiante de Ingeniería en Desarrollo y Gestión de Software

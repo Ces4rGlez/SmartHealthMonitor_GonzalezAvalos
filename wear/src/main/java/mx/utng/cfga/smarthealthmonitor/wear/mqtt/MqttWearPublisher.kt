@@ -3,8 +3,8 @@ import android.content.Context
 import kotlinx.coroutines.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import mx.utng.cfga.smarthealthmonitor.mqtt.MqttConfig
-import mx.utng.cfga.smarthealthmonitor.mqtt.FcMessage
+import mx.utng.cfga.smarthealthmonitor.data.mqtt.MqttConfig
+import mx.utng.cfga.smarthealthmonitor.data.mqtt.FcMessage
 import org.eclipse.paho.client.mqttv3.*
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
  

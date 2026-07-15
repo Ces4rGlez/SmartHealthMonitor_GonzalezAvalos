@@ -18,9 +18,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.tv.material3.*
-import mx.utng.cfga.smarthealthmonitor.data.models.LecturaFC
 import mx.utng.cfga.smarthealthmonitor.tv.TvViewModel
-import mx.utng.cfga.smarthealthmonitor.tv.TvViewModelFactory // Asegura tener tu Factory si el ViewModel recibe contexto
+import mx.utng.cfga.smarthealthmonitor.tv.TvViewModelFactory
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -30,102 +29,140 @@ fun TvDetailScreen(
     viewModel: TvViewModel = viewModel(factory = TvViewModelFactory(LocalContext.current))
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    // Buscar la lectura seleccionada según el ID provisto por la navegación
     val lectura = state.lecturas.find { it.id == lecturaId } ?: return
 
-    // Requeridor de foco para transferir la selección al botón "Reproducir" inmediatamente al entrar
     val firstBtnFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) {
         firstBtnFocus.requestFocus()
     }
 
-    Row(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0D1B4A))
-            .padding(64.dp),
-        horizontalArrangement = Arrangement.spacedBy(48.dp)
+            .background(Color(0xFF0F172A)) // Match catalog background
     ) {
-        // ── Panel Izquierdo: Métricas e Indicador Visual ──
-        Column(
-            modifier = Modifier.weight(0.4f),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(64.dp),
+            horizontalArrangement = Arrangement.spacedBy(64.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(200.dp)
-                    .background(Color(0xFF1565C0), CircleShape),
-                contentAlignment = Alignment.Center
+            // ── Panel Izquierdo: Visualización de Métrica ──
+            Column(
+                modifier = Modifier.weight(0.5f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Text("❤", fontSize = 80.sp)
+                Box(
+                    modifier = Modifier
+                        .size(240.dp)
+                        .background(
+                            color = if (lectura.bpm > 90) Color(0xFFDC2626).copy(alpha = 0.2f) else Color(0xFF3B82F6).copy(alpha = 0.2f),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "❤",
+                            fontSize = 60.sp,
+                            color = if (lectura.bpm > 90) Color(0xFFEF4444) else Color(0xFF3B82F6)
+                        )
+                        Text(
+                            text = "${lectura.bpm}",
+                            style = MaterialTheme.typography.displayLarge,
+                            fontWeight = FontWeight.Black,
+                            color = Color.White
+                        )
+                        Text(
+                            text = "BPM",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = Color.White.copy(alpha = 0.5f)
+                        )
+                    }
+                }
             }
-            Text(
-                text = "${lectura.bpm} bpm",
-                style = MaterialTheme.typography.displayMedium,
-                color = Color.White,
-                fontWeight = FontWeight.ExtraBold
-            )
-            Text(
-                text = "Estado: ${lectura.estado}",
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color.White.copy(alpha = 0.8f)
-            )
-            Text(
-                text = "Hora: ${lectura.hora}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.White.copy(alpha = 0.6f)
-            )
-        }
 
-        // ── Panel Derecho: Botones Interactivos de Acción ──
-        Column(
-            modifier = Modifier.weight(0.6f),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Botón: Acción de Reproducción
-            Surface(
-                onClick = { navController.navigate("playback") },
-                modifier = Modifier
-                    .focusRequester(firstBtnFocus)
-                    .fillMaxWidth(0.7f)
-                    .height(60.dp),
-                colors = ClickableSurfaceDefaults.colors(
-                    containerColor = Color(0xFF1B5E20),
-                    focusedContainerColor = Color(0xFF76FF03)
-                ),
-                shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(8.dp))
+            // ── Panel Derecho: Info y Acciones ──
+            Column(
+                modifier = Modifier.weight(0.5f),
+                verticalArrangement = Arrangement.spacedBy(32.dp)
             ) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column {
                     Text(
-                        text = "▶ Reproducir",
+                        text = "Detalle de Lectura",
+                        style = MaterialTheme.typography.headlineMedium,
                         color = Color.White,
-                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Registrado el ${lectura.fecha} a las ${lectura.hora}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White.copy(alpha = 0.6f)
+                    )
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "ESTADO:", color = Color.White.copy(alpha = 0.4f), style = MaterialTheme.typography.labelLarge)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = if (lectura.estado == "Normal") Color(0xFF059669) else Color(0xFFDC2626),
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = lectura.estado.uppercase(),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Surface(
+                        onClick = { navController.navigate("playback") },
+                        modifier = Modifier
+                            .focusRequester(firstBtnFocus)
+                            .fillMaxWidth()
+                            .height(64.dp),
+                        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(12.dp)),
+                        colors = ClickableSurfaceDefaults.colors(
+                            containerColor = Color(0xFF3B82F6),
+                            focusedContainerColor = Color.White,
+                            contentColor = Color.White,
+                            focusedContentColor = Color.Black
+                        )
+                    ) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(text = "▶ REPRODUCIR VIDEO GUÍA", fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    Surface(
+                        onClick = { navController.popBackStack() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(64.dp),
+                        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(12.dp)),
+                        colors = ClickableSurfaceDefaults.colors(
+                            containerColor = Color(0xFF334155),
+                            focusedContainerColor = Color.White,
+                            contentColor = Color.White,
+                            focusedContentColor = Color.Black
+                        )
+                    ) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(text = "VOLVER AL HISTORIAL", fontWeight = FontWeight.Medium)
+                        }
+                    }
                 }
             }
-
-            // Botón: Acción de Retorno
-            Surface(
-                onClick = { navController.popBackStack() },
-                modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .height(60.dp),
-                colors = ClickableSurfaceDefaults.colors(
-                    containerColor = Color(0xFF37474F),
-                    focusedContainerColor = Color(0xFF90A4AE)
-                ),
-                shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(8.dp))
-            ) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = "← Volver", color = Color.White, fontSize = 18.sp)
-                }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }

@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mx.utng.cfga.smarthealthmonitor.data.models.LecturaFC
 import mx.utng.cfga.smarthealthmonitor.data.models.MockData
-import mx.utng.cfga.smarthealthmonitor.mqtt.TvMessage
+import mx.utng.cfga.smarthealthmonitor.data.mqtt.TvMessage
 import mx.utng.cfga.smarthealthmonitor.tv.mqtt.MqttTvSubscriber
 
 data class TvState(
@@ -34,12 +34,27 @@ class TvViewModel(private val context: Context) : ViewModel() {
         viewModelScope.launch {
             mqttFlow.collect { tvMsg ->
                 if (tvMsg != null) {
-                    _state.update { it.copy(
-                        fcActual = tvMsg.bpm,
-                        fcEstado = tvMsg.estado,
-                        ultimaHora = tvMsg.hora,
-                        isLoading = false
-                    )}
+                    val nuevaLectura = LecturaFC(
+                        id = (System.currentTimeMillis() % Int.MAX_VALUE).toInt(),
+                        fecha = tvMsg.fecha,
+                        hora = tvMsg.hora,
+                        bpm = tvMsg.bpm,
+                        estado = tvMsg.estado
+                    )
+                    
+                    _state.update { currentState ->
+                        val listaActualizada = currentState.lecturas.toMutableList()
+                        listaActualizada.add(0, nuevaLectura)
+                        if (listaActualizada.size > 15) listaActualizada.removeAt(listaActualizada.size - 1)
+                        
+                        currentState.copy(
+                            lecturas = listaActualizada,
+                            fcActual = tvMsg.bpm,
+                            fcEstado = tvMsg.estado,
+                            ultimaHora = tvMsg.hora,
+                            isLoading = false
+                        )
+                    }
                 }
             }
         }

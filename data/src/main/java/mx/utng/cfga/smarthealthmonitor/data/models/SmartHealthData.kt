@@ -1,5 +1,8 @@
 package mx.utng.cfga.smarthealthmonitor.data.models
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class LecturaFC(
     val id: Int,
     val fecha: String,
