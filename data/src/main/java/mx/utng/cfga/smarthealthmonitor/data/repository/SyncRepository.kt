@@ -43,7 +43,7 @@ class SyncRepository(
                 connStr = NeonClient.CONN_STRING,
                 request = NeonRequest(
                     query  = """INSERT INTO lecturas_fc (bpm, estado, dispositivo, hora)
-                               VALUES ($1, $2, $3, $4) RETURNING id""".trimIndent(),
+                               VALUES ($1, $2, $3, $4)""".trimIndent(),
                     params = listOf(lectura.bpm, lectura.estado, lectura.dispositivo, lectura.hora)
                 )
             )
@@ -55,27 +55,31 @@ class SyncRepository(
      * y actualiza Room si hay datos nuevos.
      */
     suspend fun sincronizarDesdeNeon(limite: Int = 50) = withContext(Dispatchers.IO) {
-        val response = NeonClient.api.executeQuery(
-            auth    = NeonClient.AUTH_HEADER,
-            connStr = NeonClient.CONN_STRING,
-            request = NeonRequest(
-                query  = "SELECT id,bpm,estado,dispositivo,hora FROM lecturas_fc ORDER BY created_at DESC LIMIT $1",
-                params = listOf(limite)
+        try {
+            val response = NeonClient.api.executeQuery(
+                auth    = NeonClient.AUTH_HEADER,
+                connStr = NeonClient.CONN_STRING,
+                request = NeonRequest(
+                    query  = "SELECT id,bpm,estado,dispositivo,hora FROM lecturas_fc ORDER BY created_at DESC LIMIT $1",
+                    params = listOf(limite)
+                )
             )
-        )
- 
-        // Insertar en Room solo los que no existen (upsert)
-        response.rows.forEach { dto ->
-            dao.upsert(LecturaFC(
-                id           = dto.id,
-                bpm          = dto.bpm,
-                estado       = dto.estado,
-                dispositivo  = dto.dispositivo,
-                hora         = dto.hora,
-                sincronizado = true
-            ))
+    
+            // Insertar en Room solo los que no existen (upsert)
+            response.rows.forEach { dto ->
+                dao.upsert(LecturaFC(
+                    id           = dto.id,
+                    bpm          = dto.bpm,
+                    estado       = dto.estado,
+                    dispositivo  = dto.dispositivo,
+                    hora         = dto.hora,
+                    sincronizado = true
+                ))
+            }
+            android.util.Log.d("SYNC","✅ ${response.rowCount} registros descargados de Neon")
+        } catch (e: Exception) {
+            android.util.Log.e("SYNC", "Error al descargar de Neon: ${e.message}")
         }
-        android.util.Log.d("SYNC","✅ ${response.rowCount} registros descargados de Neon")
     }
  
     /** Sincronizar los pendientes que no llegaron al server */

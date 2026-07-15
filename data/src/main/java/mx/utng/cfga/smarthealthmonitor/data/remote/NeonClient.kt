@@ -7,11 +7,18 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object NeonClient {
+    // URL Base unificada con el Host del proyecto
     private const val BASE_URL = "https://${BuildConfig.NEON_HOST}/"
- 
+
     val AUTH_HEADER  = "Bearer ${BuildConfig.NEON_API_KEY}"
-    val CONN_STRING  = "postgresql://[usuario]:[pass]@${BuildConfig.NEON_HOST}/neondb?sslmode=require"
- 
+
+    /** 
+     * CONFIGURACIÓN DE CONEXIÓN UNIFICADA
+     * Para la API HTTP de Neon, el host en la cadena de conexión DEBE coincidir 
+     * exactamente con el host de la URL (el Project ID).
+     */
+    val CONN_STRING  = "postgresql://neondb_owner:npg_GUaPkN46wWHy@${BuildConfig.NEON_HOST}/neondb"
+
     val api: NeonApiService by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)

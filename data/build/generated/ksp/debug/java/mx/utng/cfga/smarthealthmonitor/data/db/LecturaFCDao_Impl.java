@@ -7,12 +7,14 @@ import androidx.room.CoroutinesRoom;
 import androidx.room.EntityInsertionAdapter;
 import androidx.room.RoomDatabase;
 import androidx.room.RoomSQLiteQuery;
+import androidx.room.SharedSQLiteStatement;
 import androidx.room.util.CursorUtil;
 import androidx.room.util.DBUtil;
 import androidx.sqlite.db.SupportSQLiteStatement;
 import java.lang.Class;
 import java.lang.Exception;
 import java.lang.Integer;
+import java.lang.Long;
 import java.lang.Object;
 import java.lang.Override;
 import java.lang.String;
@@ -33,30 +35,59 @@ public final class LecturaFCDao_Impl implements LecturaFCDao {
 
   private final EntityInsertionAdapter<LecturaFC> __insertionAdapterOfLecturaFC;
 
+  private final SharedSQLiteStatement __preparedStmtOfMarcarSincronizado;
+
   public LecturaFCDao_Impl(@NonNull final RoomDatabase __db) {
     this.__db = __db;
     this.__insertionAdapterOfLecturaFC = new EntityInsertionAdapter<LecturaFC>(__db) {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR REPLACE INTO `lecturas_fc` (`id`,`valorBpm`,`timestamp`,`hora`,`esNormal`) VALUES (nullif(?, 0),?,?,?,?)";
+        return "INSERT OR REPLACE INTO `lecturas_fc` (`id`,`bpm`,`estado`,`dispositivo`,`hora`,`sincronizado`) VALUES (nullif(?, 0),?,?,?,?,?)";
       }
 
       @Override
       protected void bind(@NonNull final SupportSQLiteStatement statement,
           @NonNull final LecturaFC entity) {
         statement.bindLong(1, entity.getId());
-        statement.bindLong(2, entity.getValorBpm());
-        statement.bindLong(3, entity.getTimestamp());
-        statement.bindString(4, entity.getHora());
-        final int _tmp = entity.getEsNormal() ? 1 : 0;
-        statement.bindLong(5, _tmp);
+        statement.bindLong(2, entity.getBpm());
+        statement.bindString(3, entity.getEstado());
+        statement.bindString(4, entity.getDispositivo());
+        statement.bindString(5, entity.getHora());
+        final int _tmp = entity.getSincronizado() ? 1 : 0;
+        statement.bindLong(6, _tmp);
+      }
+    };
+    this.__preparedStmtOfMarcarSincronizado = new SharedSQLiteStatement(__db) {
+      @Override
+      @NonNull
+      public String createQuery() {
+        final String _query = "UPDATE lecturas_fc SET sincronizado = 1 WHERE id = ?";
+        return _query;
       }
     };
   }
 
   @Override
-  public Object insertar(final LecturaFC lectura, final Continuation<? super Unit> $completion) {
+  public Object insertar(final LecturaFC lectura, final Continuation<? super Long> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Long>() {
+      @Override
+      @NonNull
+      public Long call() throws Exception {
+        __db.beginTransaction();
+        try {
+          final Long _result = __insertionAdapterOfLecturaFC.insertAndReturnId(lectura);
+          __db.setTransactionSuccessful();
+          return _result;
+        } finally {
+          __db.endTransaction();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object upsert(final LecturaFC lectura, final Continuation<? super Unit> $completion) {
     return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
       @Override
       @NonNull
@@ -74,8 +105,33 @@ public final class LecturaFCDao_Impl implements LecturaFCDao {
   }
 
   @Override
-  public Flow<List<LecturaFC>> obtenerUltimas() {
-    final String _sql = "SELECT * FROM lecturas_fc ORDER BY timestamp DESC LIMIT 50";
+  public Object marcarSincronizado(final long id, final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        final SupportSQLiteStatement _stmt = __preparedStmtOfMarcarSincronizado.acquire();
+        int _argIndex = 1;
+        _stmt.bindLong(_argIndex, id);
+        try {
+          __db.beginTransaction();
+          try {
+            _stmt.executeUpdateDelete();
+            __db.setTransactionSuccessful();
+            return Unit.INSTANCE;
+          } finally {
+            __db.endTransaction();
+          }
+        } finally {
+          __preparedStmtOfMarcarSincronizado.release(_stmt);
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Flow<List<LecturaFC>> obtenerTodas() {
+    final String _sql = "SELECT * FROM lecturas_fc ORDER BY id DESC";
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
     return CoroutinesRoom.createFlow(__db, false, new String[] {"lecturas_fc"}, new Callable<List<LecturaFC>>() {
       @Override
@@ -84,26 +140,29 @@ public final class LecturaFCDao_Impl implements LecturaFCDao {
         final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
         try {
           final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
-          final int _cursorIndexOfValorBpm = CursorUtil.getColumnIndexOrThrow(_cursor, "valorBpm");
-          final int _cursorIndexOfTimestamp = CursorUtil.getColumnIndexOrThrow(_cursor, "timestamp");
+          final int _cursorIndexOfBpm = CursorUtil.getColumnIndexOrThrow(_cursor, "bpm");
+          final int _cursorIndexOfEstado = CursorUtil.getColumnIndexOrThrow(_cursor, "estado");
+          final int _cursorIndexOfDispositivo = CursorUtil.getColumnIndexOrThrow(_cursor, "dispositivo");
           final int _cursorIndexOfHora = CursorUtil.getColumnIndexOrThrow(_cursor, "hora");
-          final int _cursorIndexOfEsNormal = CursorUtil.getColumnIndexOrThrow(_cursor, "esNormal");
+          final int _cursorIndexOfSincronizado = CursorUtil.getColumnIndexOrThrow(_cursor, "sincronizado");
           final List<LecturaFC> _result = new ArrayList<LecturaFC>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final LecturaFC _item;
             final int _tmpId;
             _tmpId = _cursor.getInt(_cursorIndexOfId);
-            final int _tmpValorBpm;
-            _tmpValorBpm = _cursor.getInt(_cursorIndexOfValorBpm);
-            final long _tmpTimestamp;
-            _tmpTimestamp = _cursor.getLong(_cursorIndexOfTimestamp);
+            final int _tmpBpm;
+            _tmpBpm = _cursor.getInt(_cursorIndexOfBpm);
+            final String _tmpEstado;
+            _tmpEstado = _cursor.getString(_cursorIndexOfEstado);
+            final String _tmpDispositivo;
+            _tmpDispositivo = _cursor.getString(_cursorIndexOfDispositivo);
             final String _tmpHora;
             _tmpHora = _cursor.getString(_cursorIndexOfHora);
-            final boolean _tmpEsNormal;
+            final boolean _tmpSincronizado;
             final int _tmp;
-            _tmp = _cursor.getInt(_cursorIndexOfEsNormal);
-            _tmpEsNormal = _tmp != 0;
-            _item = new LecturaFC(_tmpId,_tmpValorBpm,_tmpTimestamp,_tmpHora,_tmpEsNormal);
+            _tmp = _cursor.getInt(_cursorIndexOfSincronizado);
+            _tmpSincronizado = _tmp != 0;
+            _item = new LecturaFC(_tmpId,_tmpBpm,_tmpEstado,_tmpDispositivo,_tmpHora,_tmpSincronizado);
             _result.add(_item);
           }
           return _result;
@@ -120,11 +179,56 @@ public final class LecturaFCDao_Impl implements LecturaFCDao {
   }
 
   @Override
-  public Object contarRegistros(final Continuation<? super Integer> $completion) {
-    final String _sql = "SELECT COUNT(*) FROM lecturas_fc";
+  public Object obtenerNoSincronizados(final Continuation<? super List<LecturaFC>> $completion) {
+    final String _sql = "SELECT * FROM lecturas_fc WHERE sincronizado = 0";
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
     final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
-    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<Integer>() {
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<LecturaFC>>() {
+      @Override
+      @NonNull
+      public List<LecturaFC> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfBpm = CursorUtil.getColumnIndexOrThrow(_cursor, "bpm");
+          final int _cursorIndexOfEstado = CursorUtil.getColumnIndexOrThrow(_cursor, "estado");
+          final int _cursorIndexOfDispositivo = CursorUtil.getColumnIndexOrThrow(_cursor, "dispositivo");
+          final int _cursorIndexOfHora = CursorUtil.getColumnIndexOrThrow(_cursor, "hora");
+          final int _cursorIndexOfSincronizado = CursorUtil.getColumnIndexOrThrow(_cursor, "sincronizado");
+          final List<LecturaFC> _result = new ArrayList<LecturaFC>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final LecturaFC _item;
+            final int _tmpId;
+            _tmpId = _cursor.getInt(_cursorIndexOfId);
+            final int _tmpBpm;
+            _tmpBpm = _cursor.getInt(_cursorIndexOfBpm);
+            final String _tmpEstado;
+            _tmpEstado = _cursor.getString(_cursorIndexOfEstado);
+            final String _tmpDispositivo;
+            _tmpDispositivo = _cursor.getString(_cursorIndexOfDispositivo);
+            final String _tmpHora;
+            _tmpHora = _cursor.getString(_cursorIndexOfHora);
+            final boolean _tmpSincronizado;
+            final int _tmp;
+            _tmp = _cursor.getInt(_cursorIndexOfSincronizado);
+            _tmpSincronizado = _tmp != 0;
+            _item = new LecturaFC(_tmpId,_tmpBpm,_tmpEstado,_tmpDispositivo,_tmpHora,_tmpSincronizado);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Flow<Integer> contarPendientes() {
+    final String _sql = "SELECT COUNT(*) FROM lecturas_fc WHERE sincronizado = 0";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    return CoroutinesRoom.createFlow(__db, false, new String[] {"lecturas_fc"}, new Callable<Integer>() {
       @Override
       @NonNull
       public Integer call() throws Exception {
@@ -141,10 +245,63 @@ public final class LecturaFCDao_Impl implements LecturaFCDao {
           return _result;
         } finally {
           _cursor.close();
-          _statement.release();
         }
       }
-    }, $completion);
+
+      @Override
+      protected void finalize() {
+        _statement.release();
+      }
+    });
+  }
+
+  @Override
+  public Flow<List<LecturaFC>> obtenerUltimas() {
+    final String _sql = "SELECT * FROM lecturas_fc ORDER BY id DESC LIMIT 50";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    return CoroutinesRoom.createFlow(__db, false, new String[] {"lecturas_fc"}, new Callable<List<LecturaFC>>() {
+      @Override
+      @NonNull
+      public List<LecturaFC> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfBpm = CursorUtil.getColumnIndexOrThrow(_cursor, "bpm");
+          final int _cursorIndexOfEstado = CursorUtil.getColumnIndexOrThrow(_cursor, "estado");
+          final int _cursorIndexOfDispositivo = CursorUtil.getColumnIndexOrThrow(_cursor, "dispositivo");
+          final int _cursorIndexOfHora = CursorUtil.getColumnIndexOrThrow(_cursor, "hora");
+          final int _cursorIndexOfSincronizado = CursorUtil.getColumnIndexOrThrow(_cursor, "sincronizado");
+          final List<LecturaFC> _result = new ArrayList<LecturaFC>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final LecturaFC _item;
+            final int _tmpId;
+            _tmpId = _cursor.getInt(_cursorIndexOfId);
+            final int _tmpBpm;
+            _tmpBpm = _cursor.getInt(_cursorIndexOfBpm);
+            final String _tmpEstado;
+            _tmpEstado = _cursor.getString(_cursorIndexOfEstado);
+            final String _tmpDispositivo;
+            _tmpDispositivo = _cursor.getString(_cursorIndexOfDispositivo);
+            final String _tmpHora;
+            _tmpHora = _cursor.getString(_cursorIndexOfHora);
+            final boolean _tmpSincronizado;
+            final int _tmp;
+            _tmp = _cursor.getInt(_cursorIndexOfSincronizado);
+            _tmpSincronizado = _tmp != 0;
+            _item = new LecturaFC(_tmpId,_tmpBpm,_tmpEstado,_tmpDispositivo,_tmpHora,_tmpSincronizado);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+        }
+      }
+
+      @Override
+      protected void finalize() {
+        _statement.release();
+      }
+    });
   }
 
   @NonNull
