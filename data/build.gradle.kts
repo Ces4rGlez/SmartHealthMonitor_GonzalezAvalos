@@ -1,8 +1,16 @@
+import java.util.Properties
+
 plugins {
     id("com.android.library")
     kotlin("android")
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlinSerialization)
+}
+
+val localProps = Properties()
+val localPropsFile = rootProject.file("local.properties")
+if (localPropsFile.exists()) {
+    localProps.load(localPropsFile.inputStream())
 }
 
 android {
@@ -12,6 +20,15 @@ android {
     defaultConfig {
         minSdk = 23
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String","NEON_API_KEY",
+            "\"${localProps["NEON_API_KEY"]}\"")
+        buildConfigField("String","NEON_HOST",
+            "\"${localProps["NEON_HOST"]}\"")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     compileOptions {
