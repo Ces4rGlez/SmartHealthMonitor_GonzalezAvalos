@@ -12,17 +12,22 @@ import kotlinx.coroutines.launch
 import mx.utng.cfga.smarthealthmonitor.data.models.LecturaFC
 import mx.utng.cfga.smarthealthmonitor.data.models.MockData
 import mx.utng.cfga.smarthealthmonitor.data.mqtt.TvMessage
+import mx.utng.cfga.smarthealthmonitor.data.remote.LecturaFcDto
+import mx.utng.cfga.smarthealthmonitor.tv.data.TvNeonRepository
 import mx.utng.cfga.smarthealthmonitor.tv.mqtt.MqttTvSubscriber
 
 data class TvState(
     val lecturas: List<LecturaFC> = MockData.historialFC,
+    val estadisticas: List<LecturaFC> = emptyList(),
     val fcActual: Int? = null,
     val fcEstado: String? = null,
     val ultimaHora: String? = null,
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val error: String? = null
 )
 
 class TvViewModel(private val context: Context) : ViewModel() {
+    private val neonRepo = TvNeonRepository()
     private val _state = MutableStateFlow(TvState())
     val state: StateFlow<TvState> = _state.asStateFlow()
 
@@ -31,6 +36,8 @@ class TvViewModel(private val context: Context) : ViewModel() {
 
     init {
         mqttSubscriber.connect()
+        cargarDatos()
+        
         viewModelScope.launch {
             mqttFlow.collect { tvMsg ->
                 if (tvMsg != null) {
@@ -60,10 +67,40 @@ class TvViewModel(private val context: Context) : ViewModel() {
         }
     }
 
+    fun cargarDatos() {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            try {
+                val lecturasDto = neonRepo.obtenerHistorialCompleto(50)
+                val statsDto = neonRepo.obtenerEstadisticas()
+                
+                _state.update { it.copy(
+                    lecturas = lecturasDto.map { dto -> dto.toLecturaFC() },
+                    estadisticas = statsDto.map { dto -> dto.toLecturaFC() },
+                    isLoading = false
+                )}
+            } catch (e: Exception) {
+                _state.update { it.copy(error = e.message, isLoading = false) }
+            }
+        }
+    }
+
+    fun refresh() = cargarDatos()
+
     override fun onCleared() {
         super.onCleared()
         mqttSubscriber.disconnect()
     }
+}
+
+private fun LecturaFcDto.toLecturaFC(): LecturaFC {
+    return LecturaFC(
+        id = this.id,
+        fecha = this.fecha,
+        hora = this.hora,
+        bpm = this.bpm,
+        estado = this.estado
+    )
 }
 
 class TvViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
