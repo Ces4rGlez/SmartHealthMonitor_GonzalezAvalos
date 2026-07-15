@@ -33,7 +33,14 @@ object SmartHealthRepository {
         val estado = if (bpm > 90) "Alto" else "Normal"
         
         // 1. Guardar en Room (Smartphone)
-        dao?.insertar(LecturaFC(valorBpm = bpm, hora = horaActual))
+        dao?.insertar(
+            LecturaFC(
+                bpm = bpm,
+                estado = estado,
+                hora = horaActual,
+                dispositivo = "app"
+            )
+        )
         
         // 2. Publicar por MQTT para la TV
         mqttPublisher?.publicarLectura(

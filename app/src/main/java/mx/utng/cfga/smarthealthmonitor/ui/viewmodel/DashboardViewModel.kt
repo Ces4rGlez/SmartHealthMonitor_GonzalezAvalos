@@ -26,25 +26,12 @@ class DashboardViewModel : ViewModel() {
     val historial: StateFlow<List<LecturaUi>> = SmartHealthRepository.obtenerHistorial()
         .map { listaDb ->
             listaDb.map { db ->
-                // Formatear fecha a "dd MMM" (p. ej. "25 May") a partir del timestamp
-                val fecha = try {
-                    SimpleDateFormat("dd MMM", Locale.getDefault()).format(Date(db.timestamp))
-                } catch (e: Exception) {
-                    ""
-                }
-
-                val estado = when {
-                    db.esNormal -> "Normal"
-                    db.valorBpm > 100 -> "Alto"
-                    else -> "Bajo"
-                }
-
                 LecturaUi(
                     id = db.id,
-                    fecha = fecha,
+                    fecha = "Hoy", // Opcionalmente podrías añadir el campo fecha a la entidad DB si lo requieres
                     hora = db.hora,
-                    bpm = db.valorBpm,
-                    estado = estado
+                    bpm = db.bpm,
+                    estado = db.estado
                 )
             }
         }
