@@ -40,4 +40,10 @@ dependencies {
     api("org.eclipse.paho:org.eclipse.paho.android.service:1.1.1")
     // Serialization
     api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+
+    // Retrofit + OkHttp para llamadas a Neon HTTP API
+    api("com.squareup.retrofit2:retrofit:2.11.0")
+    api("com.squareup.retrofit2:converter-gson:2.11.0")
+    api("com.squareup.okhttp3:okhttp:4.12.0")
+    api("com.squareup.okhttp3:logging-interceptor:4.12.0")
 }
