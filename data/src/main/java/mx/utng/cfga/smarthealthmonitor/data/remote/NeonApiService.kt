@@ -1,14 +1,15 @@
 package mx.utng.cfga.smarthealthmonitor.data.remote
 
-import kotlinx.serialization.Serializable
+import com.google.gson.annotations.SerializedName
 import retrofit2.http.*
- 
+
 /** Request genérico para la Neon HTTP API */
-@Serializable
-data class NeonRequest(val query: String, val params: List<Any> = emptyList())
+data class NeonRequest(
+    val query: String, 
+    val params: List<Any> = emptyList()
+)
  
 /** Response de la Neon HTTP API */
-@Serializable
 data class NeonResponse<T>(
     val rows        : List<T>   = emptyList(),
     val rowCount    : Int       = 0,
@@ -16,7 +17,6 @@ data class NeonResponse<T>(
 )
  
 /** DTO de lectura FC (mapea fila de PostgreSQL) */
-@Serializable
 data class LecturaFcDto(
     val id          : Int    = 0,
     val bpm         : Int,
@@ -24,6 +24,7 @@ data class LecturaFcDto(
     val dispositivo : String,
     val hora        : String,
     val fecha       : String  = "",
+    @SerializedName("created_at")
     val created_at  : String  = "",
 )
  

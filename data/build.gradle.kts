@@ -61,6 +61,7 @@ dependencies {
     // Retrofit + OkHttp para llamadas a Neon HTTP API
     api("com.squareup.retrofit2:retrofit:2.11.0")
     api("com.squareup.retrofit2:converter-gson:2.11.0")
+    api("com.google.code.gson:gson:2.10.1")
     api("com.squareup.okhttp3:okhttp:4.12.0")
     api("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
