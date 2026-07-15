@@ -27,7 +27,7 @@ class SyncRepository(
  
         // 2. Intentar sync con Neon (puede fallar sin internet)
         try {
-            sincronizarHaciaNeon(lectura)
+            sincronizarHaciaNeon(lectura.copy(id = id.toInt()))
             dao.marcarSincronizado(id)
         } catch (e: Exception) {
             // Sin internet: quedará pendiente para el próximo sync
@@ -44,7 +44,7 @@ class SyncRepository(
                 request = NeonRequest(
                     query  = """INSERT INTO lecturas_fc (bpm, estado, dispositivo, hora)
                                VALUES ($1, $2, $3, $4) RETURNING id""".trimIndent(),
-                    params = listOf(lectura.valorBpm, if(lectura.esNormal) "Normal" else "Alto", "app", lectura.hora)
+                    params = listOf(lectura.bpm, lectura.estado, lectura.dispositivo, lectura.hora)
                 )
             )
         }
@@ -68,9 +68,10 @@ class SyncRepository(
         response.rows.forEach { dto ->
             dao.upsert(LecturaFC(
                 id           = dto.id,
-                valorBpm     = dto.bpm,
+                bpm          = dto.bpm,
+                estado       = dto.estado,
+                dispositivo  = dto.dispositivo,
                 hora         = dto.hora,
-                esNormal     = dto.estado == "Normal",
                 sincronizado = true
             ))
         }
